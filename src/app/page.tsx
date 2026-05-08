@@ -1,65 +1,71 @@
-import Image from "next/image";
+// src/app/page.tsx
+// ═══════════════════════════════════════════════════════════
+// KONSEP: SERVER SIDE RENDERING (SSR)
+// ═══════════════════════════════════════════════════════════
+// Komponen ini adalah Server Component (tidak ada "use client")
+// Next.js mengeksekusi fungsi ini di SERVER saat ada request masuk
+// HTML yang dikirim ke browser sudah berisi data produk lengkap
+// → SEO friendly: crawler melihat konten langsung tanpa menunggu JS
+// → Performa awal (First Contentful Paint) lebih cepat
 
-export default function Home() {
+import type { Metadata } from "next";
+import { getAllProducts, getCategories } from "@/lib/data";
+import ProductCard from "@/components/ui/ProductCard";
+import SearchBar from "@/components/features/SearchBar";
+import CategoryFilter from "@/components/features/CategoryFilter";
+
+// Metadata spesifik halaman ini — override template di layout.tsx
+export const metadata: Metadata = {
+  title: "Semua Produk",
+};
+
+// Halaman utama adalah async function — boleh karena ini Server Component
+// Di Client Component, kamu TIDAK bisa menggunakan await langsung di komponen
+export default async function HomePage() {
+  // Data di-fetch di server sebelum HTML dikirim ke browser
+  // Tidak ada loading state yang tampak oleh user (sudah selesai di server)
+  const [products, categories] = await Promise.all([
+    getAllProducts(),   // fetch paralel — lebih efisien dari await berurutan
+    getCategories(),
+  ]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div>
+      {/* Header Section */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-100">
+          Product Dashboard
+        </h1>
+        <p className="mt-2 text-gray-500">
+          {products.length} produk tersedia
+        </p>
+      </div>
+
+      {/* SearchBar adalah Client Component — embedded di dalam Server Component */}
+      {/* Ini pattern komposisi: Server Component jadi "host" untuk Client Component */}
+      {/* products dikirim sebagai prop karena Client Component tidak bisa fetch langsung */}
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row">
+        <div className="flex-1">
+          {/* SearchBar butuh interaktivitas → Client Component */}
+          <SearchBar products={products} />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="w-full sm:w-48">
+          {/* CategoryFilter juga Client Component — punya state tersendiri */}
+          <CategoryFilter categories={categories} />
         </div>
-      </main>
+      </div>
+
+      {/* Product Grid — di-render oleh server, langsung ada di HTML */}
+      {/* Tidak butuh Client Component karena hanya tampilan statis */}
+      <div
+        id="product-grid"
+        className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      >
+        {products.map((product) => (
+          // Key prop wajib ada saat render list — React butuh ini untuk reconciliation
+          <ProductCard key={product.id} product={product} />
+        ))}
+      </div>
     </div>
   );
 }
