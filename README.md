@@ -1,3 +1,6 @@
+Video Penjelasan dan Demo: https://drive.google.com/file/d/1ypkvLk3veY5uVprMHdAV0t8iWgmYzXnr/view?usp=sharing
+
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
