@@ -3,6 +3,7 @@
 // Di-render sekali di layout.tsx → tidak re-render saat navigasi antar halaman
 
 import Link from "next/link";
+import CartStatus from "@/components/layout/CartStatus";
 
 export default function Navbar() {
   return (
@@ -22,15 +23,8 @@ export default function Navbar() {
           {/* Tambah link navigasi lain di sini */}
         </nav>
 
-        {/* Cart icon (placeholder) */}
         <div className="flex items-center gap-3">
-          <button className="relative rounded-xl p-2 text-gray-500 hover:bg-gray-100">
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6h13M9 19a1 1 0 100 2 1 1 0 000-2zm8 0a1 1 0 100 2 1 1 0 000-2z"
-              />
-            </svg>
-          </button>
+          <CartStatus />
         </div>
       </div>
     </header>

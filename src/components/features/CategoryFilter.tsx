@@ -3,12 +3,13 @@
 // Client Component — menggunakan useRouter untuk navigasi programatik
 // dan useState untuk track kategori yang dipilih
 
-import { useState } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import clsx from "clsx";
 import type { Category } from "@/types/product";
 
 interface CategoryFilterProps {
   categories: Category[];
+  selectedCategory: Category | null;
+  onSelectCategory: (category: Category | null) => void;
 }
 
 // Warna badge per kategori — lookup object lebih efisien dari if-else chain
@@ -20,32 +21,23 @@ const CATEGORY_COLORS: Record<Category, string> = {
   Sports:         "bg-orange-100 text-orange-700 border-orange-200",
 };
 
-export default function CategoryFilter({ categories }: CategoryFilterProps) {
-  // State untuk filter aktif — null berarti "Semua Produk"
-  const [activeCategory, setActiveCategory] = useState<Category | null>(null);
-
-  // useRouter: akses router untuk navigasi atau refresh data
-  const router = useRouter();
-
+export default function CategoryFilter({ categories, selectedCategory, onSelectCategory }: CategoryFilterProps) {
   const handleSelect = (category: Category | null) => {
-    // Update state lokal → komponen re-render → UI filter berubah
-    // Ini murni CSR: tidak ada request ke server
-    setActiveCategory(category);
-
-    // Di aplikasi nyata, kamu bisa update URL params untuk deep-linking:
-    // router.push(`/?category=${category}`) agar URL bisa di-share
+    onSelectCategory(category);
   };
 
   return (
     <div className="flex flex-wrap gap-2">
       {/* Tombol "Semua" */}
       <button
+        type="button"
         onClick={() => handleSelect(null)}
-        className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-all ${
-          activeCategory === null
-            ? "border-gray-800 bg-gray-800 text-white" // Active state
-            : "border-gray-200 bg-white text-gray-600 hover:border-gray-300" // Default state
-        }`}
+        className={clsx(
+          "rounded-full border px-3 py-1.5 text-sm font-medium transition-all duration-200",
+          selectedCategory === null
+            ? "border-gray-900 bg-gray-900 text-white"
+            : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+        )}
       >
         Semua
       </button>
@@ -54,12 +46,14 @@ export default function CategoryFilter({ categories }: CategoryFilterProps) {
       {categories.map((category) => (
         <button
           key={category}
+          type="button"
           onClick={() => handleSelect(category)}
-          className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-all ${
-            activeCategory === category
-              ? CATEGORY_COLORS[category] + " border-current" // Active → warna kategori
+          className={clsx(
+            "rounded-full border px-3 py-1.5 text-sm font-medium transition-all duration-200",
+            selectedCategory === category
+              ? `${CATEGORY_COLORS[category]} border-current`
               : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
-          }`}
+          )}
         >
           {category}
         </button>

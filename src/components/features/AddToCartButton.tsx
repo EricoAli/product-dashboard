@@ -8,35 +8,35 @@
 // 2. State untuk quantity (angka)
 // 3. State untuk feedback "added to cart"
 
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import type { Product } from "@/types/product";
+import { useCartDispatch } from "@/state/cart-context";
 
 interface AddToCartButtonProps {
   product: Product; // Data dikirim dari Server Component (page.tsx)
 }
 
 export default function AddToCartButton({ product }: AddToCartButtonProps) {
-  // State quantity — default 1, user bisa +/- sebelum add to cart
+  const dispatch = useCartDispatch();
   const [quantity, setQuantity] = useState(1);
-
-  // State untuk feedback setelah klik "Add to Cart"
-  // Menggunakan union type string untuk menghindari boolean yang ambigu
   const [status, setStatus] = useState<"idle" | "added" | "error">("idle");
 
-  const isOutOfStock = product.stock === 0;
+  const isOutOfStock = useMemo(() => product.stock === 0, [product.stock]);
 
-  const handleAddToCart = () => {
-    if (isOutOfStock) return;
+  const handleAddToCart = useCallback(() => {
+    if (isOutOfStock) {
+      setStatus("error");
+      return;
+    }
 
-    // Simulasi async action (di production: dispatch ke cart state/API)
-    setStatus("added"); // State update → komponen re-render → tombol berubah warna
+    dispatch({
+      type: "ADD_ITEM",
+      payload: { product, quantity },
+    });
+    setStatus("added");
 
-    // Reset status setelah 2 detik — simulasi feedback sementara
-    // Ini contoh side effect yang HANYA boleh di Client Component
-    setTimeout(() => setStatus("idle"), 2000);
-
-    console.log(`Added ${quantity}x ${product.name} to cart`);
-  };
+    window.setTimeout(() => setStatus("idle"), 2000);
+  }, [dispatch, product, quantity, isOutOfStock]);
 
   return (
     <div className="space-y-4">
