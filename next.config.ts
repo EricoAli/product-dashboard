@@ -12,6 +12,13 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/**", // Izinkan semua path di bawah hostname ini
       },
+      {
+        // Tambahkan example.com agar image eksternal dari produk dapat ditampilkan
+        protocol: "https",
+        hostname: "example.com",
+        port: "",
+        pathname: "/**",
+      },
     ],
   },
 };

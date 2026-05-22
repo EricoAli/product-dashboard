@@ -10,14 +10,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { getProductById, formatPrice } from "@/lib/data";
+import { getProductByIdData } from "@/lib/api/products";
+import { formatPrice } from "@/lib/data";
 import Badge from "@/components/ui/Badge";
 import StockIndicator from "@/components/ui/StockIndicator";
 import AddToCartButton from "@/components/features/AddToCartButton";
 
-// Props type untuk halaman dengan dynamic segment
 interface ProductPageProps {
-  params: Promise<{ id: string }>; // params.id = nilai dari [id] di URL
+  params: Promise<{ id: string }>;
 }
 
 // generateMetadata: fungsi async khusus Next.js untuk metadata dinamis
@@ -26,35 +26,26 @@ export async function generateMetadata(
   { params }: ProductPageProps
 ): Promise<Metadata> {
   const { id } = await params;
-  const product = await getProductById(id);
+  const product = await getProductByIdData(id);
 
   if (!product) return { title: "Produk Tidak Ditemukan" };
 
   return {
-    title: product.name, // Akan jadi: "Wireless Headphones | Product Dashboard"
+    title: product.name,
     description: product.description,
   };
-}
-
-// generateStaticParams: opsional tapi PENTING untuk performa
-// Memberitahu Next.js ID mana yang perlu di-pre-render saat build (Static Generation)
-// Halaman yang tidak ada di list ini akan di-render on-demand (SSR)
-export async function generateStaticParams() {
-  // Di production, fetch semua ID dari API/DB
-  return [
-    { id: "1" }, { id: "2" }, { id: "3" }, { id: "4" },
-    { id: "5" }, { id: "6" }, { id: "7" }, { id: "8" },
-  ];
 }
 
 export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { id } = await params;
 
-  // Fetch data spesifik untuk ID ini — dijalankan di server
-  const product = await getProductById(id);
+  let product;
+  try {
+    product = await getProductByIdData(id);
+  } catch (error) {
+    notFound();
+  }
 
-  // Jika produk tidak ditemukan, tampilkan halaman 404
-  // notFound() dari next/navigation → trigger not-found.tsx
   if (!product) {
     notFound();
   }

@@ -23,7 +23,8 @@ type CartAction =
   | { type: "ADD_ITEM"; payload: { product: Product; quantity: number } }
   | { type: "REMOVE_ITEM"; payload: { productId: string } }
   | { type: "UPDATE_QUANTITY"; payload: { productId: string; quantity: number } }
-  | { type: "CLEAR_CART" };
+  | { type: "CLEAR_CART" }
+  | { type: "HYDRATE_CART"; payload: CartState };
 
 const CartStateContext = createContext<CartState | undefined>(undefined);
 const CartDispatchContext = createContext<Dispatch<CartAction> | undefined>(undefined);
@@ -68,26 +69,31 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       };
     case "CLEAR_CART":
       return { ...state, items: [] };
+    case "HYDRATE_CART":
+      return action.payload;
     default:
       return state;
   }
 }
 
-function loadCartState(): CartState {
-  if (typeof window === "undefined") {
-    return initialState;
-  }
-
-  try {
-    const raw = window.localStorage.getItem("product-dashboard-cart");
-    return raw ? (JSON.parse(raw) as CartState) : initialState;
-  } catch {
-    return initialState;
-  }
-}
-
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [state, dispatch] = useReducer(cartReducer, initialState, loadCartState);
+  const [state, dispatch] = useReducer(cartReducer, initialState);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    try {
+      const raw = window.localStorage.getItem("product-dashboard-cart");
+      if (raw) {
+        const storedState = JSON.parse(raw) as CartState;
+        dispatch({ type: "HYDRATE_CART", payload: storedState });
+      }
+    } catch {
+      // If localStorage is unavailable, we silently fallback.
+    }
+  }, []);
 
   useEffect(() => {
     try {
